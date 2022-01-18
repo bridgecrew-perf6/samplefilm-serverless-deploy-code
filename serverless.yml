@@ -1,0 +1,69 @@
+service: sampleFilmInfoDemo
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: python3.8
+  stage: dev
+  region: ap-south-1
+  lambdaHashingVersion: 20201221
+
+custom:
+  lambdaServiceRoleName: samplefilminfo-lambda-role
+  sampleFilmInfoQueue: sampleFilmInfoSQSQueue
+  sampleFilmInfoDBTableName: sampleFilmInfoDynamo
+
+
+functions:
+  SampleFilmInfo:
+    handler: postFilmInfo.postFilmInfo
+    memorySize: 128
+    timeout: 300
+    role: arn:aws:iam::${aws:accountId}:role/${self:custom.lambdaServiceRoleName}
+    versionFunctions: false
+    environment:
+      queueUrl:
+        Ref: SampleFilmInfoMessage
+    events:
+      - http:
+          path: /sampleFilmInfo
+          method: post   
+          cors: true
+  PostFilmInfoToDynamo:
+    handler: postFilmInfoToDynamo.saveFilmInfoDynamo
+    memorySize: 128
+    timeout: 240
+    role: arn:aws:iam::${aws:accountId}:role/${self:custom.lambdaServiceRoleName}
+    versionFunctions: false
+    environment:
+      DynamoTable:
+        Ref: SampleFilmInfoDBTable
+    events:
+     - sqs: 
+        arn: arn:aws:sqs:${aws:region}:${aws:accountId}:${self:custom.sampleFilmInfoQueue}
+
+resources:
+  Resources:
+    SampleFilmInfoMessage:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.sampleFilmInfoQueue}
+        MessageRetentionPeriod: 1209600
+        VisibilityTimeout: 320
+    SampleFilmInfoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.sampleFilmInfoDBTableName}
+        AttributeDefinitions:
+          - AttributeName: FilmTitle
+            AttributeType: S
+          - AttributeName: MobileNo
+            AttributeType: N
+        KeySchema:
+          - AttributeName: FilmTitle
+            KeyType: HASH
+          - AttributeName: MobileNo
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1

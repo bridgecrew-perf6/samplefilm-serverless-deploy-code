@@ -1,0 +1,58 @@
+version: 0.2
+env:
+  shell: bash
+phases:
+  install:
+    on-failure: ABORT
+    commands:
+      - |
+        if [[ -z $DRY_RUN || -z $APPLY || -z $DESTROY ]]; then
+          echo 'Please enter valid inputs'
+          exit 1
+        fi
+      - "curl -o- -L https://slss.io/install | bash" 
+      - . /root/.profile
+      #- source  /root/.bashrc
+      # - pip install git-remote-codecommit
+  build:
+    on-failure: ABORT
+    commands:
+      - cd "$CODEBUILD_SRC_DIR"
+      - serverless --version
+      - | 
+        if [ "$DESTROY" = true  -a "$DRY_RUN" = true ]; then
+          serverless remove
+        elif [ "$DRY_RUN" = true -a "$APPLY" = true ]; then
+          serverless package
+          serverless deploy 
+        elif [ "$DRY_RUN" = true ]; then
+          serverless package
+        elif [ "$APPLY" = true ]; then
+          serverless deploy
+        elif [ "$DESTROY" = true ]; then
+          serverless remove
+        fi
+  post_build:
+    on-failure: ABORT
+    commands:
+      - echo "CODEBUILD_BUILD_SUCCEEDING" $CODEBUILD_BUILD_SUCCEEDING
+      - |
+        if [ "$CODEBUILD_BUILD_SUCCEEDING" == "1" ]; then
+          if [ "$DRY_RUN" = true -a "$APPLY" = true ]; then
+            echo "Dry run and Resource creation is succesful!"
+          elif [ "$DRY_RUN" = true -a "$DESTROY" = true ]; then
+            echo "Resources destroyed succesfully"
+          elif [ "$DRY_RUN" = true ]; then
+            echo "Dry run is succesfull"
+          elif [ "$APPLY" = true ]; then
+            echo "Resources deployed succesfully!"
+          fi
+        else
+          if [ "$DRY_RUN" = true -a "$DESTROY" = true ]; then
+            echo "Unable to perform destroy"
+          elif [ "$DRY_RUN" = true ]; then
+            echo "Dry run is failed!"
+          elif [ "$APPLY" = true ]; then
+            echo "Resource creation is failed!"
+          fi
+        fi
