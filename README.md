@@ -19,3 +19,15 @@ serverless.yml: This file contains all the above services creation and configura
  - SampleFilmInfo  Lambda function gets user inputs from API Gateway invoke URL, process it and send it to SQS.
  - Using SQS as an event to the next Lambda function PostFilmInfoToDynamo 
  - PostFilmInfoToDynamo  Lambda function processes the event and stores the details in DynamoDB.
+
+If you would like to play with serverless framework, follow the below steps.
+
+To install the Serverless Framework click [here](https://www.serverless.com/framework/docs/getting-started), follow the instructions provided in the mentioned link.
+
+# Serverless Framework Commands:-
+
+- serverless create --template aws-python3
+- serverless config credentials --provider aws --key YOUR-KEY --secret YOUR-SECRET
+- serverless package –aws-profile *******
+- serverless deploy –aws-profile ********
+
