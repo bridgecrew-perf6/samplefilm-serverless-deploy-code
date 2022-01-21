@@ -11,3 +11,11 @@ postFilmInfo.py: This Lambda function code, takes input from API Gateway and pro
 postFilmInfoDynamo.py: This Lambda function code, takes input from SQS Queue and processes it then stores it in DynamoDB Table.
 
 serverless.yml: This file contains all the above services creation and configuration code.
+
+
+# serverless.yml
+
+ - Creating API Gateway and SQS. Keeping API Gateway and SQS as an event and environment variables respectively for SampleFilmInfo Lambda function.
+ - SampleFilmInfo  Lambda function gets user inputs from API Gateway invoke URL, process it and send it to SQS.
+ - Using SQS as an event to the next Lambda function PostFilmInfoToDynamo 
+ - PostFilmInfoToDynamo  Lambda function processes the event and stores the details in DynamoDB.
